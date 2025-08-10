@@ -1,0 +1,27 @@
+{
+  "name": "m3u8-cli",
+  "version": "0.0.1",
+  "description": "m3u8 cli to download.",
+  "packageManager": "pnpm@10.14.0",
+  "main": "./dist/index.js",
+  "bin": {
+    "m3u8-cli": "./dist/bin.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shalldie/m3u8-cli.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shalldie/m3u8-cli/issues"
+  },
+  "homepage": "https://github.com/shalldie/m3u8-cli#readme",
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2"
+  }
+}
