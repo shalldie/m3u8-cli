@@ -21,7 +21,23 @@
   },
   "homepage": "https://github.com/shalldie/m3u8-cli#readme",
   "devDependencies": {
+    "@types/async": "^3.2.25",
+    "@types/m3u8-parser": "^7.2.3",
+    "@types/multi-progress": "^2.0.6",
+    "@types/node": "^24.2.1",
+    "@types/progress": "^2.0.7",
+    "@types/yargs": "^17.0.33",
     "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "async": "^3.2.6",
+    "hls-parser": "^0.13.6",
+    "m3u8-parser": "^7.2.0",
+    "multi-progress": "^4.0.0",
+    "progress": "^2.0.3",
+    "rimraf": "^6.0.1",
+    "yargs": "^18.0.0"
   }
 }
