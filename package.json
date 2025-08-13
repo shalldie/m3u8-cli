@@ -1,6 +1,6 @@
 {
   "name": "m3u8-cli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Cli to download and compile m3u8 files.",
   "packageManager": "pnpm@10.14.0",
   "main": "./dist/index.js",
@@ -14,7 +14,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "rimraf dist output && tsc"
   },
   "repository": {
     "type": "git",

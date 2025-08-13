@@ -44,6 +44,7 @@ function createBar(label: string) {
     if (args.proxy) {
         bootstrap();
         global.GLOBAL_AGENT.HTTP_PROXY = args.proxy;
+        global.GLOBAL_AGENT.HTTPS_PROXY = args.proxy;
     }
 
     const dbar = createBar('下载中...');
