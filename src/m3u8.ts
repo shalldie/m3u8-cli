@@ -18,8 +18,8 @@ const ParallelMaxLimit = 5;
 interface IDownloadOptions {
     url: string;
     target: string;
-    onDownload?: (progress: number) => void;
-    onCombine?: (progress: number) => void;
+    onDownload?: (args: { progress: number; total: number }) => void;
+    onCombine?: (args: { progress: number; total: number }) => void;
 }
 
 class M3U8 {
@@ -61,9 +61,12 @@ class M3U8 {
         });
     }
 
-    async downloadSegments(segments: string[], targetDir: string, onProgress?: (progress: number) => void) {
+    async downloadSegments(segments: string[], targetDir: string, onProgress?: IDownloadOptions['onDownload']) {
         let doneNum = 0;
-        onProgress?.(0);
+        onProgress?.({
+            progress: 0,
+            total: segments.length
+        });
         const fileList = await parallelLimit<string, string[]>(
             segments.map((segUrl, segIndex) => {
                 return async function () {
@@ -72,27 +75,39 @@ class M3U8 {
 
                     await fs.promises.writeFile(targetName, Buffer.from(aBuffer));
 
-                    onProgress?.(++doneNum / segments.length);
+                    onProgress?.({
+                        progress: ++doneNum / segments.length,
+                        total: segments.length
+                    });
 
                     return targetName;
                 };
             }),
             ParallelMaxLimit
         );
-        onProgress?.(1);
+        onProgress?.({
+            progress: 1,
+            total: segments.length
+        });
         return fileList;
     }
 
-    async combineFiles(fileList: string[], targetFile: string, onProgress?: (progress: number) => void) {
+    async combineFiles(fileList: string[], targetFile: string, onProgress?: IDownloadOptions['onDownload']) {
         const writer = fs.createWriteStream(targetFile);
         let num = 0;
         for (const filePath of fileList) {
-            onProgress?.(num++ / fileList.length);
+            onProgress?.({
+                progress: num++ / fileList.length,
+                total: fileList.length
+            });
             const buf = await fs.promises.readFile(filePath);
             writer.write(buf);
         }
         writer.end();
-        onProgress?.(1);
+        onProgress?.({
+            progress: 1,
+            total: fileList.length
+        });
     }
 }
 

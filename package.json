@@ -1,11 +1,17 @@
 {
   "name": "m3u8-cli",
   "version": "0.0.1",
-  "description": "m3u8 cli to download.",
+  "description": "Cli to download and compile m3u8 files.",
   "packageManager": "pnpm@10.14.0",
   "main": "./dist/index.js",
   "bin": {
     "m3u8-cli": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   },
   "scripts": {
     "build": "tsc"

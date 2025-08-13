@@ -7,18 +7,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import MultiProgress from 'multi-progress';
-
-const multi = new MultiProgress(process.stdout);
-
-// const dbar = multi.newBar(` ${label} [:bar] :rate/bps :percent :etas`, {
-//     complete: '=',
-//     incomplete: ' ',
-//     width: 30
-//     // total: total || 1024 * 1024 * 1024 * 10
-// });
-
-let dbar: ProgressBar;
-let cbar: ProgressBar;
+import { m3u8 } from './m3u8';
 
 interface IOptions {
     url: string;
@@ -41,6 +30,28 @@ const args: IOptions = yargs(hideBin(process.argv))
     .describe('o', '保存到的文件')
     .parse() as any;
 
+const multi = new MultiProgress(process.stdout);
+function createBar(label: string) {
+    return multi.newBar(` ${label} [:bar] :percent :etas`, {
+        complete: '=',
+        incomplete: ' ',
+        width: 30,
+        total: 100
+    });
+}
+
 (async () => {
-    console.log(args);
+    const dbar = createBar('下载中...');
+    const cbar = createBar('合并中...');
+
+    await m3u8.download({
+        url: args.url,
+        target: args.output,
+        onDownload(args) {
+            dbar.update(args.progress);
+        },
+        onCombine(args) {
+            cbar.update(args.progress);
+        }
+    });
 })();
