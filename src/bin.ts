@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 
-// import {execute} from '@oclif/core'
-
-// await execute({dir: import.meta.url})
-
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import MultiProgress from 'multi-progress';
 import { m3u8 } from './m3u8';
+import { bootstrap } from 'global-agent';
 
 interface IOptions {
     url: string;
     output: string;
+    proxy?: string;
 }
 
 const args: IOptions = yargs(hideBin(process.argv))
@@ -28,6 +26,8 @@ const args: IOptions = yargs(hideBin(process.argv))
     .alias('o', 'output')
     .demandOption('o')
     .describe('o', '保存到的文件')
+    .alias('p', 'proxy')
+    .describe('p', '使用的代理地址')
     .parse() as any;
 
 const multi = new MultiProgress(process.stdout);
@@ -41,6 +41,11 @@ function createBar(label: string) {
 }
 
 (async () => {
+    if (args.proxy) {
+        bootstrap();
+        global.GLOBAL_AGENT.HTTP_PROXY = args.proxy;
+    }
+
     const dbar = createBar('下载中...');
     const cbar = createBar('合并中...');
 
