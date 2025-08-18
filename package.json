@@ -1,6 +1,6 @@
 {
   "name": "m3u8-cli",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Cli to download and compile m3u8 files.",
   "packageManager": "pnpm@10.14.0",
   "main": "./dist/index.js",
@@ -28,7 +28,6 @@
   "homepage": "https://github.com/shalldie/m3u8-cli#readme",
   "devDependencies": {
     "@types/async": "^3.2.25",
-    "@types/global-agent": "^3.0.0",
     "@types/m3u8-parser": "^7.2.3",
     "@types/multi-progress": "^2.0.6",
     "@types/node": "^24.2.1",
@@ -40,12 +39,12 @@
   },
   "dependencies": {
     "async": "^3.2.6",
-    "global-agent": "^3.0.0",
     "hls-parser": "^0.13.6",
     "m3u8-parser": "^7.2.0",
     "multi-progress": "^4.0.0",
     "progress": "^2.0.3",
     "rimraf": "^6.0.1",
+    "undici": "^7.14.0",
     "yargs": "^18.0.0"
   }
 }

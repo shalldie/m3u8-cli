@@ -4,7 +4,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import MultiProgress from 'multi-progress';
 import { m3u8 } from './m3u8';
-import { bootstrap } from 'global-agent';
+import { ProxyAgent, setGlobalDispatcher } from 'undici';
 
 interface IOptions {
     url: string;
@@ -42,9 +42,8 @@ function createBar(label: string) {
 
 (async () => {
     if (args.proxy) {
-        bootstrap();
-        global.GLOBAL_AGENT.HTTP_PROXY = args.proxy;
-        global.GLOBAL_AGENT.HTTPS_PROXY = args.proxy;
+        const agent = new ProxyAgent(args.proxy);
+        setGlobalDispatcher(agent);
     }
 
     const dbar = createBar('下载中...');

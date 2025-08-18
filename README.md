@@ -25,3 +25,15 @@ npm i m3u8-cli -g
 示例：
   m3u8-cli download -u [url] -o [output]
 ```
+
+## Features
+
+1. m3u8资源解析
+2. 多线程下载
+3. 断点续传
+4. 错误重试
+5. 代理支持
+
+## License
+
+MIT

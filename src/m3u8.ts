@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
+import { fetch } from 'undici';
 import { rimraf } from 'rimraf';
 import { Parser as m3u8Parser } from 'm3u8-parser';
 import { parallelLimit, reject } from 'async';
