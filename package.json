@@ -1,11 +1,11 @@
 {
   "name": "m3u8-cli",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Cli to download and compile m3u8 files.",
   "packageManager": "pnpm@10.14.0",
   "main": "./dist/index.js",
   "bin": {
-    "m3u8-cli": "./dist/bin.js"
+    "m3u8-cli": "dist/bin.js"
   },
   "files": [
     "dist"
