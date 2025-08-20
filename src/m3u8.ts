@@ -7,7 +7,8 @@ import { rimraf } from 'rimraf';
 import { Parser as m3u8Parser } from 'm3u8-parser';
 import { parallelLimit, reject } from 'async';
 
-const ParallelMaxLimit = 8;
+const ParallelMaxLimit = 8; // 并行下载数量
+const MaxRetiesLimit = 5; // 重试次数
 
 // const obj = {
 //     headers: {
@@ -99,7 +100,7 @@ class M3U8 {
         }
 
         // 需要重新下载
-        let maxReties = 5; // 重试次数
+        let maxReties = MaxRetiesLimit; // 重试次数
         await (async function invokeDownload() {
             try {
                 if (fs.existsSync(targetFile)) {
