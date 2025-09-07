@@ -1,14 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import crypto from 'crypto';
+import crypto, { createDecipheriv } from 'crypto';
 
 import { fetch } from 'undici';
 import { rimraf } from 'rimraf';
-import { Parser as m3u8Parser } from 'm3u8-parser';
-import { parallelLimit, reject } from 'async';
+import { Parser as m3u8Parser, Segment as ISegment } from 'm3u8-parser';
+import { parallelLimit } from 'async';
 
 const ParallelMaxLimit = 8; // 并行下载数量
-const MaxRetiesLimit = 5; // 重试次数
+const MaxRetriesLimit = 5; // 重试次数
 
 // const obj = {
 //     headers: {
@@ -19,6 +19,28 @@ const MaxRetiesLimit = 5; // 重试次数
 //     }
 // };
 
+async function request(url: string): Promise<Buffer<ArrayBuffer>> {
+    // 需要重新下载
+    let retries = MaxRetriesLimit; // 重试次数
+    const buf = await (async function invokeRequest() {
+        try {
+            const buf = await fetch(url)
+                .then(n => n.arrayBuffer())
+                .then(n => Buffer.from(n));
+
+            return buf;
+        } catch (ex) {
+            retries--;
+            if (retries > 0) {
+                return invokeRequest();
+            }
+
+            return Promise.reject(ex);
+        }
+    })();
+    return buf;
+}
+
 interface IDownloadOptions {
     url: string;
     target: string;
@@ -26,26 +48,42 @@ interface IDownloadOptions {
     onCombine?: (args: { progress: number; total: number }) => void;
 }
 
-class M3U8 {
-    async download(options: IDownloadOptions) {
-        const muInfo = await this.parseFromUrl(options.url);
-        const tempDir = path.join(path.dirname(options.target), `temp_m3u8_` + muInfo.md5);
+export class M3U8 {
+    private key?: Buffer<ArrayBuffer>;
 
+    private get baseUrl() {
+        return this.options.url.substring(0, this.options.url.lastIndexOf('/') + 1);
+    }
+
+    constructor(private options: IDownloadOptions) {}
+
+    async download() {
+        const options = this.options;
+
+        // 获取 segments
+        const muInfo = await this.parseFromUrl(options.url);
+
+        // 准备目录
+        const tempDir = path.join(path.dirname(options.target), `temp_m3u8_` + muInfo.md5);
         await fs.promises.mkdir(tempDir, { recursive: true });
 
-        const segments = muInfo.segments.map(n => n.url);
+        // 保存 key
+        if (muInfo.segments[0]?.key) {
+            this.key = await request(new URL(muInfo.segments[0].key.uri, this.baseUrl).href);
+        }
 
-        const fileList = await this.downloadSegments(segments, tempDir, options.onDownload);
+        // const segments = muInfo.segments.map(n => n.url);
+
+        // 下载并合并 segments
+        const fileList = await this.downloadSegments(muInfo.segments, tempDir, options.onDownload);
         await this.combineFiles(fileList, options.target, options.onCombine);
 
         await rimraf(tempDir);
     }
 
-    async parseFromUrl(
-        url: string
-    ): Promise<{ md5: string; txt: string; segments: { url: string; duration: number }[] }> {
-        const muAb = await fetch(url).then(n => n.arrayBuffer());
-        const muBytes = Buffer.from(muAb);
+    private async parseFromUrl(url: string): Promise<{ md5: string; txt: string; segments: ISegment[] }> {
+        // const muAb = await request(url).then(n => n.arrayBuffer());
+        const muBytes = await request(url);
         const muTxt = muBytes.toString();
 
         // md5
@@ -67,10 +105,10 @@ class M3U8 {
             return this.parseFromUrl(new URL(firstPlayUri, baseUrl).href);
         }
 
-        const segments = manifest.segments.map(seg => {
+        const segments = manifest.segments.map<ISegment>(seg => {
             return {
-                url: new URL(seg.uri, baseUrl).href,
-                duration: seg.duration
+                ...seg,
+                uri: new URL(seg.uri, baseUrl).href
             };
         });
 
@@ -79,6 +117,14 @@ class M3U8 {
             txt: muTxt,
             segments
         };
+    }
+
+    private async decryptSeg(seg: ISegment, encryptedData: Buffer<ArrayBufferLike>) {
+        // 创建解密器
+        const decipher = createDecipheriv('aes-128-cbc', this.key!, seg.key!.iv!);
+        let decrypted = decipher.update(encryptedData);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        return decrypted;
     }
 
     private async downloadSingleSeg(segUrl: string, targetFile: string) {
@@ -100,41 +146,41 @@ class M3U8 {
         }
 
         // 需要重新下载
-        let maxReties = MaxRetiesLimit; // 重试次数
-        await (async function invokeDownload() {
-            try {
-                if (fs.existsSync(targetFile)) {
-                    await fs.promises.rm(targetFile);
-                }
-                const aBuf = await fetch(segUrl).then(n => n.arrayBuffer());
-                await fs.promises.writeFile(targetFile, Buffer.from(aBuf));
-            } catch (ex) {
-                // 下载异常，再次执行
-                if (--maxReties > 0) {
-                    invokeDownload();
-                    return;
-                }
-                return Promise.reject(ex);
-            }
-        })();
+        if (fs.existsSync(targetFile)) {
+            await fs.promises.rm(targetFile);
+        }
+        const aBuf = await request(segUrl);
+        await fs.promises.writeFile(targetFile, aBuf);
     }
 
-    async downloadSegments(segments: string[], targetDir: string, onProgress?: IDownloadOptions['onDownload']) {
+    private async downloadSegments(
+        segments: ISegment[],
+        targetDir: string,
+        onProgress?: IDownloadOptions['onDownload']
+    ) {
         let doneNum = 0;
         onProgress?.({
             progress: 0,
             total: segments.length
         });
         const fileList = await parallelLimit<string, string[]>(
-            segments.map((segUrl, segIndex) => {
+            segments.map((seg, segIndex) => {
                 return async () => {
                     const targetFile = path.join(targetDir, `segment_${segIndex}.ts`);
-                    await this.downloadSingleSeg(segUrl, targetFile);
+                    await this.downloadSingleSeg(seg.uri, targetFile);
 
                     onProgress?.({
                         progress: ++doneNum / segments.length,
                         total: segments.length
                     });
+
+                    if (this.key) {
+                        const encryptedData = await fs.promises.readFile(targetFile);
+                        const decryptedData = await this.decryptSeg(seg, encryptedData);
+                        const decryptedFile = path.join(targetDir, `decode_segment_${segIndex}.ts`);
+                        await fs.promises.writeFile(decryptedFile, decryptedData);
+                        return decryptedFile;
+                    }
 
                     return targetFile;
                 };
@@ -148,7 +194,7 @@ class M3U8 {
         return fileList;
     }
 
-    async combineFiles(fileList: string[], targetFile: string, onProgress?: IDownloadOptions['onDownload']) {
+    private async combineFiles(fileList: string[], targetFile: string, onProgress?: IDownloadOptions['onDownload']) {
         const writer = fs.createWriteStream(targetFile);
         let num = 0;
         for (const filePath of fileList) {
@@ -157,6 +203,7 @@ class M3U8 {
                 total: fileList.length
             });
             const buf = await fs.promises.readFile(filePath);
+
             writer.write(buf);
         }
         writer.end();
@@ -166,5 +213,3 @@ class M3U8 {
         });
     }
 }
-
-export const m3u8 = new M3U8();

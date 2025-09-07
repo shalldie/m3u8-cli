@@ -1,3 +1,1 @@
-import { m3u8 } from './m3u8';
-
-export { m3u8 };
+export { M3U8 } from './m3u8';

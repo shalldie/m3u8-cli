@@ -41,5 +41,6 @@
         "moduleDetection": "force",
         "skipLibCheck": true,
         "noImplicitAny": false
-    }
+    },
+    "exclude": ["output", "out", "dist"]
 }

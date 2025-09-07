@@ -1,8 +1,8 @@
 {
   "name": "m3u8-cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Cli to download and compile m3u8 files.",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.0",
   "main": "./dist/index.js",
   "bin": {
     "m3u8-cli": "dist/bin.js"
@@ -44,7 +44,7 @@
     "multi-progress": "^4.0.0",
     "progress": "^2.0.3",
     "rimraf": "^6.0.1",
-    "undici": "^7.14.0",
+    "undici": "^7.15.0",
     "yargs": "^18.0.0"
   }
 }

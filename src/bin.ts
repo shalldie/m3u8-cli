@@ -3,7 +3,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import MultiProgress from 'multi-progress';
-import { m3u8 } from './m3u8';
+import { M3U8 } from './m3u8';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 
 interface IOptions {
@@ -49,7 +49,7 @@ function createBar(label: string) {
     const dbar = createBar('下载中...');
     const cbar = createBar('合并中...');
 
-    await m3u8.download({
+    await new M3U8({
         url: args.url,
         target: args.output,
         onDownload(args) {
@@ -58,5 +58,5 @@ function createBar(label: string) {
         onCombine(args) {
             cbar.update(args.progress);
         }
-    });
+    }).download();
 })();

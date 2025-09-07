@@ -4,8 +4,10 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
+            // "runtimeExecutable": "C:\\Users\\39422\\AppData\\Local\\fnm_multishells\\17912_1756569805152\\node",
             "runtimeArgs": ["-r", "ts-node/register"],
-            "args": ["${workspaceFolder}/src/main.ts"]
+            "args": ["${workspaceFolder}/src/main.ts"],
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
