@@ -7,7 +7,7 @@ import { M3U8 } from './m3u8';
 
 (async () => {
     if (process.env.M3U8_PROXY) {
-        const agent = new ProxyAgent('http://127.0.0.1:10809');
+        const agent = new ProxyAgent(process.env.M3U8_PROXY);
         setGlobalDispatcher(agent);
     }
 
